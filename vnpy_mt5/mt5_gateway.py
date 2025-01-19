@@ -1,5 +1,7 @@
 import threading
 from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from typing import Callable
 from zoneinfo import ZoneInfo
 
@@ -100,6 +102,7 @@ INTERVAL_VT2MT: dict[Interval, int] = {
 # Timezone
 CHINA_TZ: ZoneInfo = ZoneInfo("Asia/Shanghai")
 UTC_TZ: ZoneInfo = ZoneInfo("UTC")
+NYC_TZ: ZoneInfo = ZoneInfo("America/New_York")
 
 
 class Mt5Gateway(BaseGateway):
@@ -302,8 +305,8 @@ class Mt5Gateway(BaseGateway):
         """Query kline history data"""
         history: list[BarData] = []
 
-        start_time: str = generate_utc_datetime(req.start)
-        end_time: str = generate_utc_datetime(req.end)
+        start_time: str = generate_mt5_datetime(req.start)
+        end_time: str = generate_mt5_datetime(req.end)
 
         mt5_req: dict = {
             "type": FUNCTION_QUERYHISTORY,
@@ -321,7 +324,7 @@ class Mt5Gateway(BaseGateway):
                 bar: BarData = BarData(
                     symbol=req.symbol.replace('.', '-'),
                     exchange=Exchange.OTC,
-                    datetime=generate_china_datetime(d["time"]),
+                    datetime=generate_db_datetime(d["time"]),
                     interval=req.interval,
                     volume=d["real_volume"],
                     open_price=d["open"],
@@ -333,8 +336,8 @@ class Mt5Gateway(BaseGateway):
                 history.append(bar)
 
             data: dict = packet["data"]
-            begin: datetime = generate_china_datetime(data[0]["time"])
-            end: datetime = generate_china_datetime(data[-1]["time"])
+            begin: datetime = generate_db_datetime(data[0]["time"])
+            end: datetime = generate_db_datetime(data[-1]["time"])
 
             msg: str = f"Query kline history finished, {req.symbol.replace('.','-')} - {req.interval.value}, {begin} - {end}"
             self.write_log(msg)
@@ -630,6 +633,14 @@ def generate_china_datetime(timestamp: int) -> datetime:
     return china_tz
 
 
+def generate_db_datetime(timestamp: int) -> datetime:
+    """Generate db datetime"""
+    dt: datetime = datetime.strptime(str(timestamp), "%Y.%m.%d %H:%M")
+    mt5_dt: datetime = dt.replace(tzinfo=get_mt5_timezone())
+    db_dt: datetime = mt5_dt.astimezone(DB_TZ)
+    return db_dt
+
+
 def generate_utc_datetime(datetime: datetime) -> str:
     """Generate UTC datetime"""
     utc_tz: dict = datetime.astimezone(UTC_TZ)
@@ -637,3 +648,22 @@ def generate_utc_datetime(datetime: datetime) -> str:
     dt: str = utc_tz.isoformat()
     dt: str = dt.replace('T', ' ')
     return dt
+
+
+def generate_mt5_datetime(datetime: datetime) -> str:
+    """Generate MT5(Summer: GMT+3, Winter: GMT+2) datetime"""
+    mt5_dt: dict = datetime.astimezone(get_mt5_timezone())
+    mt5_dt: dict = mt5_dt.replace(tzinfo=None)
+    dt: str = mt5_dt.isoformat()
+    dt: str = dt.replace('T', ' ')
+    return dt
+
+
+def get_mt5_timezone() -> timezone:
+    """Generate MT5(Summer: GMT+3, Winter: GMT+2) timezone"""
+    now: datetime = datetime.now(NYC_TZ)
+    # America summer time(DST) is from the second Sunday in March to the first Sunday in November
+    if now.dst().seconds > 0:
+        return timezone(timedelta(hours=+3))
+    else:
+        return timezone(timedelta(hours=+2))
