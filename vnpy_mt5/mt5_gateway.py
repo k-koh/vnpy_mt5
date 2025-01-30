@@ -110,6 +110,8 @@ class Mt5Gateway(BaseGateway):
     The MT5 trading gateway for VeighNa.
     """
 
+    default_name: str = "MT5"
+
     default_setting: dict[str, str] = {
         "Server Host": "localhost",
         "REQ Port": "6888",
