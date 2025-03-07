@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import importlib_metadata
+
+from .mt5_datafeed import Mt5Datafeed as Datafeed
 from .mt5_gateway import Mt5Gateway
 
 
