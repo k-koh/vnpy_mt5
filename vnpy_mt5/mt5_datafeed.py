@@ -135,6 +135,8 @@ class Mt5Datafeed(BaseDatafeed):
             "position": self.on_position_info
         }
 
+        self.kabus_price_data = -30  # mt5 - kabus price data
+
     def init(self, output: Callable = print) -> bool:
         """初始化"""
         if self.inited:
@@ -204,10 +206,10 @@ class Mt5Datafeed(BaseDatafeed):
                     datetime=generate_db_datetime(d["time"]),
                     interval=req.interval,
                     volume=d["real_volume"],
-                    open_price=d["open"],
-                    high_price=d["high"],
-                    low_price=d["low"],
-                    close_price=d["close"],
+                    open_price=d["open"] - self.kabus_price_data,
+                    high_price=d["high"] - self.kabus_price_data,
+                    low_price=d["low"] - self.kabus_price_data,
+                    close_price=d["close"] - self.kabus_price_data,
                     gateway_name=self.default_name
                 )
                 history.append(bar)
