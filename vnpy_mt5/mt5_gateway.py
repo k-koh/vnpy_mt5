@@ -36,6 +36,13 @@ from vnpy_evo.trader.object import (
 
 # MT5 constants
 PERIOD_M1: int = 1
+PERIOD_M3: int = 3
+PERIOD_M5: int = 5
+PERIOD_M6: int = 6
+PERIOD_M10: int = 10
+PERIOD_M12: int = 12
+PERIOD_M15: int = 15
+PERIOD_M20: int = 20
 PERIOD_H1: int = 16385
 PERIOD_D1: int = 16408
 
@@ -95,6 +102,13 @@ ORDERTYPE_VT2MT: dict[tuple, int] = {v: k for k, v in ORDERTYPE_MT2VT.items()}
 # Bar interval map
 INTERVAL_VT2MT: dict[Interval, int] = {
     Interval.MINUTE: PERIOD_M1,
+    Interval.MINUTE3: PERIOD_M3,
+    Interval.MINUTE5: PERIOD_M5,
+    Interval.MINUTE6: PERIOD_M6,
+    Interval.MINUTE10: PERIOD_M10,
+    Interval.MINUTE12: PERIOD_M12,
+    Interval.MINUTE15: PERIOD_M15,
+    Interval.MINUTE20: PERIOD_M20,
     Interval.HOUR: PERIOD_H1,
     Interval.DAILY: PERIOD_D1,
 }
